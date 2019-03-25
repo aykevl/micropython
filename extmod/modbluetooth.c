@@ -283,10 +283,12 @@ STATIC const mp_obj_type_t service_type = {
 };
 
 STATIC mp_obj_t characteristic_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args) {
-    enum { ARG_uuid, ARG_flags };
+    enum { ARG_uuid, ARG_flags, MP_receive, MP_descriptors };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_uuid,  MP_ARG_OBJ | MP_ARG_REQUIRED },
         { MP_QSTR_flags, MP_ARG_INT | MP_ARG_REQUIRED },
+        { MP_QSTR_receive, MP_ARG_OBJ | MP_ARG_KW_ONLY, {.u_obj = mp_const_none } },
+        { MP_QSTR_descriptors, MP_ARG_OBJ | MP_ARG_KW_ONLY, {.u_obj = mp_const_none } },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
@@ -300,6 +302,8 @@ STATIC mp_obj_t characteristic_make_new(const mp_obj_type_t *type, size_t n_args
     characteristic->base.type = &characteristic_type;
     mp_bt_parse_uuid(args[0].u_obj, &characteristic->uuid);
     characteristic->flags = (uint8_t)(args[ARG_flags].u_int);
+    characteristic->callback = (mp_obj_t)(args[MP_receive].u_obj);
+    characteristic->descriptors = (mp_obj_t)(args[MP_descriptors].u_obj);
     return characteristic;
 }
 
@@ -326,23 +330,44 @@ STATIC mp_obj_t characteristic_write(mp_obj_t self_in, mp_obj_t value_in) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(characteristic_write_obj, characteristic_write);
 
+STATIC mp_obj_t characteristic_notify(mp_obj_t self_in, mp_obj_t value_in) {
+    mp_bt_characteristic_t *characteristic = self_in;
+    GET_STR_DATA_LEN(value_in, str_data, str_len);
+    int errno_ = mp_bt_characteristic_notify(characteristic->value_handle, str_data, str_len);
+    return bluetooth_handle_errno(errno_);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(characteristic_notify_obj, characteristic_notify);
+
 STATIC mp_obj_t characteristic_read(mp_obj_t self_in) {
     mp_bt_characteristic_t *characteristic = self_in;
-    uint8_t data[MP_BT_MAX_ATTR_SIZE];
+    uint8_t *data = NULL;
     size_t value_len = MP_BT_MAX_ATTR_SIZE;
-    int errno_ = mp_bt_characteristic_value_get(characteristic->value_handle, data, &value_len);
+    int errno_ = mp_bt_characteristic_value_get(characteristic->value_handle, (void **)&data, &value_len);
     if (errno_ != 0) {
         mp_raise_OSError(errno_);
     }
-    return mp_obj_new_bytes(data, value_len);
+    mp_obj_t result = mp_const_none;
+    if (data != NULL) {
+        result = mp_obj_new_bytes(data, value_len);
+        free(data);
+    }
+    return result;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(characteristic_read_obj, characteristic_read);
+
+STATIC mp_obj_t characteristic_wait(mp_obj_t self_in) {
+    mp_bt_characteristic_value_wait((mp_bt_characteristic_t *)self_in);
+    return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(characteristic_wait_obj, characteristic_wait);
 
 STATIC const mp_rom_map_elem_t characteristic_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_service), MP_ROM_PTR(&characteristic_service_obj) },
     { MP_ROM_QSTR(MP_QSTR_uuid),    MP_ROM_PTR(&characteristic_uuid_obj) },
     { MP_ROM_QSTR(MP_QSTR_write),   MP_ROM_PTR(&characteristic_write_obj) },
     { MP_ROM_QSTR(MP_QSTR_read),    MP_ROM_PTR(&characteristic_read_obj) },
+    { MP_ROM_QSTR(MP_QSTR_wait),    MP_ROM_PTR(&characteristic_wait_obj) },
+    { MP_ROM_QSTR(MP_QSTR_notify),    MP_ROM_PTR(&characteristic_notify_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(characteristic_locals_dict, characteristic_locals_dict_table);
 
@@ -376,6 +401,7 @@ STATIC const mp_rom_map_elem_t mp_module_bluetooth_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_FLAG_READ),      MP_ROM_INT(MP_BLE_FLAG_READ) },
     { MP_ROM_QSTR(MP_QSTR_FLAG_WRITE),     MP_ROM_INT(MP_BLE_FLAG_WRITE) },
     { MP_ROM_QSTR(MP_QSTR_FLAG_NOTIFY),    MP_ROM_INT(MP_BLE_FLAG_NOTIFY) },
+    { MP_ROM_QSTR(MP_QSTR_UUID_CHAR_CLIENT_CONFIG),    MP_ROM_INT(MP_BLE_UUID_CHAR_CLIENT_CONFIG) },
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_bluetooth_globals, mp_module_bluetooth_globals_table);
 

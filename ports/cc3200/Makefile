@@ -9,7 +9,7 @@ endif
 BTYPE ?= release
 
 # Port for flashing firmware
-PORT ?= /dev/ttyUSB1
+PORT ?= /dev/ttyUSB0
 
 # If the build directory is not given, make it reflect the board name.
 BUILD ?= build/$(BOARD)/$(BTYPE)

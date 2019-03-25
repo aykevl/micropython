@@ -34,6 +34,8 @@ typedef struct {
     mp_obj_base_t          base;
     mp_bt_uuid_t           uuid;
     mp_bt_service_handle_t handle;
+    mp_bt_service_gatt_if_t gatts_if;
+    uint16_t id;
 } mp_bt_service_t;
 
 // A characteristic.
@@ -43,7 +45,10 @@ typedef struct {
     mp_bt_uuid_t                  uuid;
     mp_bt_service_t               *service;
     mp_bt_characteristic_handle_t value_handle;
+    mp_obj_t                      callback;
     uint8_t                       flags;
+    bool                          updated;
+    mp_obj_t                      descriptors;
 } mp_bt_characteristic_t;
 
 // Enables the Bluetooth stack. Returns errno on failure.
@@ -70,7 +75,11 @@ int mp_bt_characteristic_value_set(mp_bt_characteristic_handle_t handle, const v
 
 // Read the characteristic value. The size of the buffer must be given in
 // value_len, which will be updated with the actual value.
-int mp_bt_characteristic_value_get(mp_bt_characteristic_handle_t handle, void *value, size_t *value_len);
+int mp_bt_characteristic_value_get(mp_bt_characteristic_handle_t handle, void **value, size_t *value_len);
+
+void mp_bt_characteristic_value_wait(mp_bt_characteristic_t *handle);
+
+int mp_bt_characteristic_notify(mp_bt_characteristic_handle_t handle, const void *value, size_t value_len);
 
 // Parse an UUID object from the caller and stores the result in the uuid
 // parameter. Must accept both strings and integers for 128-bit and 16-bit
@@ -100,3 +109,5 @@ mp_obj_t mp_bt_format_uuid_str(uint8_t *uuid);
 #define MP_BLE_FLAG_READ     (1 << 1)
 #define MP_BLE_FLAG_WRITE    (1 << 3)
 #define MP_BLE_FLAG_NOTIFY   (1 << 4)
+
+#define MP_BLE_UUID_CHAR_CLIENT_CONFIG   0x2902
