@@ -181,18 +181,12 @@
 #define MICROPY_PY_RANDOM_HW_RNG    (0)
 #endif
 
+#ifndef RF_STACK_ENABLED
+#define RF_STACK_ENABLED mp_bt_is_enabled
+#endif
 
 #define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF   (1)
 #define MICROPY_EMERGENCY_EXCEPTION_BUF_SIZE  (0)
-
-// if sdk is in use, import configuration
-#if BLUETOOTH_SD
-#include "bluetooth_conf.h"
-#endif
-
-#ifndef MICROPY_PY_BLE_NUS
-#define MICROPY_PY_BLE_NUS                       (0)
-#endif
 
 // type definitions for the specific machine
 
@@ -215,9 +209,15 @@ extern const struct _mp_obj_module_t board_module;
 extern const struct _mp_obj_module_t machine_module;
 extern const struct _mp_obj_module_t mp_module_utime;
 extern const struct _mp_obj_module_t mp_module_uos;
-extern const struct _mp_obj_module_t mp_module_bluetooth;
 extern const struct _mp_obj_module_t music_module;
 extern const struct _mp_obj_module_t random_module;
+extern const struct _mp_obj_module_t mp_module_bluetooth;
+
+#if MICROPY_PY_BLUETOOTH
+#define BLUETOOTH_MODULE                    { MP_ROM_QSTR(MP_QSTR_bluetooth), MP_ROM_PTR(&mp_module_bluetooth) },
+#else
+#define BLUETOOTH_MODULE
+#endif
 
 #if MICROPY_PY_MUSIC
 #define MUSIC_MODULE                        { MP_ROM_QSTR(MP_QSTR_music), MP_ROM_PTR(&music_module) },
@@ -238,7 +238,7 @@ extern const struct _mp_obj_module_t random_module;
 #define MICROPY_BOARD_BUILTINS
 #endif // BOARD_SPECIFIC_MODULES
 
-#if BLUETOOTH_SD
+#if MICROPY_PY_BLUETOOTH
 
 #define MICROPY_PORT_BUILTIN_MODULES \
     { MP_ROM_QSTR(MP_QSTR_board), MP_ROM_PTR(&board_module) }, \
@@ -246,7 +246,7 @@ extern const struct _mp_obj_module_t random_module;
     { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_utime) }, \
     { MP_ROM_QSTR(MP_QSTR_time), MP_ROM_PTR(&mp_module_utime) }, \
     { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_uos) }, \
-    { MP_ROM_QSTR(MP_QSTR_bluetooth), MP_ROM_PTR(&mp_module_bluetooth) }, \
+    BLUETOOTH_MODULE \
     MUSIC_MODULE \
     RANDOM_MODULE \
     MICROPY_BOARD_BUILTINS \

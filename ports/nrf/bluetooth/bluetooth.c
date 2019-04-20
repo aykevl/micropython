@@ -217,13 +217,14 @@ STATIC uint32_t mp_bt_advertise_start_internal(void) {
 #endif
 
 int mp_bt_advertise_start(mp_bt_adv_type_t type, uint16_t interval, const uint8_t *adv_data, size_t adv_data_len, const uint8_t *sr_data, size_t sr_data_len) {
+    uint32_t err_code = 0;
     mp_bt_advertise_stop(); // restart if already started
 
 #if NRF51
     sd_ble_gap_adv_data_set(adv_data, adv_data_len, sr_data, sr_data_len);
     bluetooth_adv_type = type;
     bluetooth_adv_interval = interval;
-    uint32_t err_code = mp_bt_advertise_start_internal();
+    err_code = mp_bt_advertise_start_internal();
     return mp_bt_errno(err_code);
 
 #elif NRF52
@@ -258,8 +259,11 @@ int mp_bt_advertise_start(mp_bt_adv_type_t type, uint16_t interval, const uint8_
     }
 
     err_code = sd_ble_gap_adv_start(bluetooth_adv_handle, BLE_CONN_CFG_TAG_DEFAULT);
-    return mp_bt_errno(err_code);
+#else
+    (void)bluetooth_sr_data;
+    (void)bluetooth_adv_data;
 #endif
+    return mp_bt_errno(err_code);
 }
 
 void mp_bt_advertise_stop(void) {

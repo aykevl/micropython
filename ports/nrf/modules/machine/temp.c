@@ -35,7 +35,7 @@
 #if BLUETOOTH_SD
 #include "extmod/modbluetooth.h"
 #include "nrf_soc.h"
-#define BLUETOOTH_STACK_ENABLED() (mp_bt_is_enabled())
+extern bool RF_STACK_ENABLED(void);
 #endif // BLUETOOTH_SD
 
 #if MICROPY_PY_MACHINE_TEMP
@@ -78,7 +78,7 @@ STATIC mp_obj_t machine_temp_make_new(const mp_obj_type_t *type, size_t n_args, 
 STATIC mp_obj_t machine_temp_read(mp_uint_t n_args, const mp_obj_t *args) {
 
 #if BLUETOOTH_SD
-    if (BLUETOOTH_STACK_ENABLED() == 1) {
+    if (RF_STACK_ENABLED() == 1) {
         int32_t temp;
         (void)sd_temp_get(&temp);
         return MP_OBJ_NEW_SMALL_INT(temp / 4); // resolution of 0.25 degree celsius

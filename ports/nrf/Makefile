@@ -39,7 +39,7 @@ endif
 QSTR_DEFS = qstrdefsport.h $(BUILD)/pins_qstr.h
 
 ifneq ($(SD), )
-MICROPY_PY_BLUETOOTH = 1
+MICROPY_PY_BLUETOOTH ?= 1
 endif
 MICROPY_FATFS ?= 0
 FATFS_DIR = lib/oofatfs
@@ -56,13 +56,10 @@ INC += -I../..
 INC += -I$(BUILD)
 INC += -I./../../lib/cmsis/inc
 INC += -I./modules/machine
-INC += -I./modules/ubluepy
 INC += -I./modules/music
 INC += -I./modules/random
-INC += -I./modules/ble
 INC += -I./modules/board
 INC += -I../../lib/mp-readline
-INC += -I./drivers/bluetooth
 INC += -I./drivers
 INC += -I../../lib/nrfx/
 INC += -I../../lib/nrfx/drivers

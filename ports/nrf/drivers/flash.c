@@ -32,6 +32,8 @@
 #include "extmod/modbluetooth.h"
 #include "nrf_soc.h"
 
+extern bool RF_STACK_ENABLED(void);
+
 // Rotates bits in `value` left `shift` times.
 STATIC inline uint32_t rotate_left(uint32_t value, uint32_t shift) {
     return (value << shift) | (value >> (32 - shift));
@@ -48,7 +50,7 @@ void flash_operation_finished(flash_state_t result) {
 }
 
 STATIC bool operation_wait(uint32_t result) {
-    if (!mp_bt_is_enabled()) {
+    if (!RF_STACK_ENABLED()) {
         // SoftDevice is not enabled, no event will be generated.
         return result == NRF_SUCCESS;
     }

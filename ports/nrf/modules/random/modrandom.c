@@ -38,7 +38,7 @@
 #if BLUETOOTH_SD
 #include "extmod/modbluetooth.h"
 #include "nrf_soc.h"
-#define BLUETOOTH_STACK_ENABLED() (mp_bt_is_enabled())
+extern bool RF_STACK_ENABLED(void);
 #endif
 
 static inline uint32_t generate_hw_random(void) {
@@ -65,7 +65,7 @@ static inline uint32_t generate_hw_random(void) {
 uint32_t machine_rng_generate_random_word(void) {
 
 #if BLUETOOTH_SD
-    if (BLUETOOTH_STACK_ENABLED() == 1) {
+    if (RF_STACK_ENABLED() == 1) {
         uint32_t retval = 0;
         uint32_t status;
         do {

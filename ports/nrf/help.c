@@ -27,10 +27,6 @@
 
 #include "py/builtin.h"
 
-#if BLUETOOTH_SD
-#include "help_sd.h"
-#endif
-
 const char nrf5_help_text[] =
 "Welcome to MicroPython!\n"
 "\n"
@@ -40,9 +36,6 @@ const char nrf5_help_text[] =
 #if MICROPY_HW_HAS_LED
 "  board.LED(n)    -- create an LED object for LED n (n=" HELP_TEXT_BOARD_LED ")\n"
 "\n"
-#endif
-#if BLUETOOTH_SD
-HELP_TEXT_SD
 #endif
 "Control commands:\n"
 "  CTRL-A        -- on a blank line, enter raw REPL mode\n"
